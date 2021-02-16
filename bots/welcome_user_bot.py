@@ -30,9 +30,18 @@ class WelcomeUserBot(ActivityHandler):
 
         self.user_state_accessor = self._user_state.create_property("WelcomeUserState")
 
-        self.WELCOME_MESSAGE = """Hello my name is Owlbert"""
+        self.WELCOME_MESSAGE = """This is a simple Welcome Bot sample. This bot will introduce you
+                        to welcoming and greeting users. You can say 'intro' to see the
+                        introduction card. If you are running this bot in the Bot Framework
+                        Emulator, press the 'Restart Conversation' button to simulate user joining
+                        a bot or a channel"""
 
-        self.INFO_MESSAGE = """How may I improve you experience today?"""
+        self.INFO_MESSAGE = """You are seeing this message because the bot received at least one
+                        'ConversationUpdate' event, indicating you (and possibly others)
+                        joined the conversation. If you are using the emulator, pressing
+                        the 'Start Over' button to trigger this event again. The specifics
+                        of the 'ConversationUpdate' event depends on the channel. You can
+                        read more information at: https://aka.ms/about-botframework-welcome-user"""
 
         self.LOCALE_MESSAGE = """"You can use the 'activity.locale' property to welcome the
                         user using the locale received from the channel. If you are using the 
@@ -51,11 +60,58 @@ class WelcomeUserBot(ActivityHandler):
     async def on_members_added_activity(
         self, members_added: [ChannelAccount], turn_context: TurnContext
     ):
+        """
+        Greet when users are added to the conversation.
+        Note that all channels do not send the conversation update activity.
+        If you find that this bot works in the emulator, but does not in
+        another channel the reason is most likely that the channel does not
+        send this activity.
+        """
         for member in members_added:
             if member.id != turn_context.activity.recipient.id:
                 await turn_context.send_activity(
                     f"Hi there { member.name }. " + self.WELCOME_MESSAGE
                 )
+
+                await turn_context.send_activity(self.INFO_MESSAGE)
+
+                await turn_context.send_activity(
+                    f"{ self.LOCALE_MESSAGE } Current locale is { turn_context.activity.locale }."
+                )
+
+                await turn_context.send_activity(self.PATTERN_MESSAGE)
+
+    async def on_message_activity(self, turn_context: TurnContext):
+        """
+        Respond to messages sent from the user.
+        """
+        # Get the state properties from the turn context.
+        welcome_user_state = await self.user_state_accessor.get(
+            turn_context, WelcomeUserState
+        )
+
+        if not welcome_user_state.did_welcome_user:
+            welcome_user_state.did_welcome_user = True
+
+            await turn_context.send_activity(
+                "You are seeing this message because this was your first message ever to this bot."
+            )
+
+            name = turn_context.activity.from_property.name
+            await turn_context.send_activity(
+                f"It is a good practice to welcome the user and provide personal greeting. For example: Welcome {name}"
+            )
+
+        else:
+            # This example hardcodes specific utterances. You should use LUIS or QnA for more advance language
+            # understanding.
+            text = turn_context.activity.text.lower()
+            if text in ("hello", "hi"):
+                await turn_context.send_activity(f"You said { text }")
+            elif text in ("intro", "help"):
+                await self.__send_intro_card(turn_context)
+            else:
+                await turn_context.send_activity(self.WELCOME_MESSAGE)
 
     async def __send_intro_card(self, turn_context: TurnContext):
         card = HeroCard(

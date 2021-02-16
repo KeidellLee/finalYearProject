@@ -66,14 +66,14 @@ class WelcomeUserBot(ActivityHandler):
                 CardAction(
                     type=ActionTypes.open_url,
                     title="Register",
-                    text="Get an overview",
-                    display_text="Get an overview",
+                    text="Registration button",
+                    display_text="Registration button",
                     value="https://docs.microsoft.com/en-us/azure/bot-service/?view=azure-bot-service-4.0",
                 ),
                 CardAction(
                     type=ActionTypes.open_url,
                     title="Ask a question",
-                    text="**Ask a question**",
+                    text="Ask a question",
                     display_text="Ask a question",
                     value= "https://www.google.com",
                 ),

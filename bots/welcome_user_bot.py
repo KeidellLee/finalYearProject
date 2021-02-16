@@ -58,7 +58,7 @@ class WelcomeUserBot(ActivityHandler):
 
     async def __send_intro_card(self, turn_context: TurnContext):
         card = HeroCard(
-            title="Welcome to Uiversal Rentals!",
+            title="Welcome to Universal Rentals!",
             text="""I am Owlbert the chat bot. How may I improve your
                     experience?""",
             images=[CardImage(url="https://aka.ms/bf-welcome-card-image")],

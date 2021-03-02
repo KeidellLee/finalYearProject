@@ -31,19 +31,29 @@ class SuggestActionsBot(ActivityHandler):
 
     async def on_message_activity(self, turn_context: TurnContext):
         # The actual call to the QnA Maker service.
-        response = await self.qna_maker.get_answers(turn_context)
-        if response and len(response) > 0:
-            await turn_context.send_activity(MessageFactory.text(response[0].answer))
-        else:
-            await turn_context.send_activity("No QnA Maker answers were found.")
         text = turn_context.activity.text.lower()
-        response_text = self._process_input(text)
+        rText = self._process_input(text)
+        response = turn_context.activity.text
+        if rText == "question" or response == "Question":
+            await turn_context.send_activity("Ask away")
+            response = turn_context.activity.text
+            while response != "exit" or response != "Exit":
+                response = await self.qna_maker.get_answers(turn_context)
+                if response and len(response) > 0:
+                    await turn_context.send_activity(MessageFactory.text(response[0].answer))
+                else:
+                    await turn_context.send_activity("No QnA Maker answers were found.")
+                response = turn_context.activity.text
+        if rText == "reg":
+            await turn_context.send_activity("we lit")
+            await turn_context.send_activity(MessageFactory.text("Yes baby"))
 
-    async def _process_input(self, text: str):
-        color_text = "is the best color, I agree."
 
-        if text == "sure":
-            return "Ask away"
+    def _process_input(self, text: str):
+        if text == "Ask Question":
+            return "Question"
+        if text == "Registration":
+            return "reg"
             
 
     async def _send_suggested_actions(self, turn_context: TurnContext):
@@ -55,7 +65,12 @@ class SuggestActionsBot(ActivityHandler):
                 CardAction(
                     title="Ask Question",
                     type=ActionTypes.im_back,
-                    value="sure",     
+                    value="Ask Question",     
+                ),
+                CardAction(
+                    title="Registration",
+                    type=ActionTypes.im_back,
+                    value="Registration",
                 ),
             ]
         )
